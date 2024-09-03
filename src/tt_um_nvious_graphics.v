@@ -49,8 +49,6 @@ module tt_um_nvious_graphics(
 		.vpos(y)
 	);
 
-	wire [5:0] color = 6'b111111;
-
 	wire a0 = y > 7;
 	wire a1 = x < y + 392;
 	wire a2 = 454 - x > y;
@@ -119,13 +117,9 @@ module tt_um_nvious_graphics(
 
 	wire mask = a | b | c | d | e | f | g | h;
 	wire [5:0] bg = (x[3] ^ y[3]) ? 6'b010101 : 6'b000000;
-	//wire [5:0] bg = mask ? ((x[0] ^ y[0]) ? 6'b010101 : ((x[3] ^ y[3]) ? 6'b010101 : 6'b000000)) : 6'b000000;
-	//wire [5:0] fg = (x[0] ^ y[0]) ? 6'b111111 : bg;
 	wire [5:0] mg = mask ? ((x[0] ^ y[0]) ? 6'b010101 : bg) : bg;
 	wire [5:0] fg = 6'b111111;
-	//assign RGB = video_active ? (a ? palette[0] : (b ? palette[1] : (c ? palette[2] : (d ? palette[3] : (e ? palette[4] : (f ? palette[5] : (g ? palette[6] : bg))))))) : 6'b000000;
 	assign RGB = video_active ? (((a & led[0]) | (b & led[1]) | (c & led[2]) | (d & led[3]) | (e & led[4]) | (f & led[5]) | (g & led[6]) | (h & led[7])) ? fg : mg) : 6'b000000;
-	//assign RGB = video_active ? (a?fg:(b?fg:(c?fg:(d?fg:(e?fg:(f?fg:(g?fg:(h?fg:bg)))))))):6'b000000;
 
 	always @(posedge vsync) begin
 		if (~rst_n) begin
@@ -135,19 +129,6 @@ module tt_um_nvious_graphics(
 			show <= show | ui_in[0] | ui_in[1] | ui_in[2] | ui_in[3] | ui_in[4] | ui_in[5] | ui_in[6] | ui_in[7];
 			counter <= counter + 1;
 		end
-	end
-
-	// color palette (RRGGBB)
-	reg [5:0] palette[0:7]; // RRGGBB
-	initial begin
-		palette[0] = 6'b000011;
-		palette[1] = 6'b001100;
-		palette[2] = 6'b001111;
-		palette[3] = 6'b110000;
-		palette[4] = 6'b110011;
-		palette[5] = 6'b111100;
-		palette[6] = 6'b111111;
-		palette[7] = 6'b101010;
 	end
 
 	reg [4:0] circle[0:31];
