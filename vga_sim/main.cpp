@@ -1,7 +1,5 @@
 #include <iostream>
-//#include <cmath>
 #include <array>
-//#include <cstdlib>
 
 #include <SDL2/SDL.h>
 
@@ -98,17 +96,9 @@ int main(int argc, char **argv) {
 						SDL_SetWindowFullscreen(window, mode);
 						mode = mode ? 0 : SDL_WINDOW_FULLSCREEN;
 						break;
-					case SDLK_p: // swap VGA sync polarity (also works as pause)
+					case SDLK_p: // swap VGA sync polarity
 						polarity = polarity ? 0 : 1;
 						break;
-					/*case SDLK_0: ui_in |= 1 << 0; break;
-					case SDLK_1: ui_in |= 1 << 1; break;
-					case SDLK_2: ui_in |= 1 << 2; break;
-					case SDLK_3: ui_in |= 1 << 3; break;
-					case SDLK_4: ui_in |= 1 << 4; break;
-					case SDLK_5: ui_in |= 1 << 5; break;
-					case SDLK_6: ui_in |= 1 << 6; break;
-					case SDLK_7: ui_in |= 1 << 7; break;*/
 					default:
 						break;
 				}
@@ -149,9 +139,9 @@ int main(int argc, char **argv) {
 
 			// active frame
 			if ((hnum >= 0) && (hnum < VGA_HORZ_ACTIVE) && (vnum >= 0) && (vnum < VGA_VERT_ACTIVE)) {
-				uint8_t rr = (((uo_out & 0b00000001) << 1) | ((uo_out & 0b00010000) >> 4)) << 6;
-				uint8_t gg = (((uo_out & 0b00000010) << 0) | ((uo_out & 0b00100000) >> 5)) << 6;
-				uint8_t bb = (((uo_out & 0b00000100) >> 1) | ((uo_out & 0b01000000) >> 6)) << 6;
+				uint8_t rr = (((uo_out & 0b00000001) << 1) | ((uo_out & 0b00010000) >> 4)) * 85;
+				uint8_t gg = (((uo_out & 0b00000010) << 0) | ((uo_out & 0b00100000) >> 5)) * 85;
+				uint8_t bb = (((uo_out & 0b00000100) >> 1) | ((uo_out & 0b01000000) >> 6)) * 85;
 				RGB888_t rrggbb = { .b = bb, .g = gg, .r = rr };
 				framebuffer[vnum * VGA_HORZ_ACTIVE + hnum] = rrggbb;
 			}
