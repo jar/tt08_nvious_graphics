@@ -35,8 +35,28 @@ module tt_um_nvious_graphics(
 	wire _unused_ok = &{ena, uio_in};
 
 	reg show;
-	reg [10:0] counter;
-	wire [7:0] led = show ? ui_in : counter[8:1];
+	reg [9:0] counter;
+	wire [7:0] led = show ? ui_in : countdown[counter[9:6]];
+
+	reg [7:0] countdown[15:0];
+	initial begin
+		countdown[ 0] = 8'b01100111; // 9
+		countdown[ 1] = 8'b01111111; // 8
+		countdown[ 2] = 8'b00000111; // 7
+		countdown[ 3] = 8'b01111101; // 6
+		countdown[ 4] = 8'b01101101; // 5
+		countdown[ 5] = 8'b01100110; // 4
+		countdown[ 6] = 8'b01001111; // 3
+		countdown[ 7] = 8'b01011011; // 2
+		countdown[ 8] = 8'b00000110; // 1
+		countdown[ 9] = 8'b00111111; // 0
+		countdown[10] = 8'b10000000; // .
+		countdown[11] = 8'b00000000; // 
+		countdown[12] = 8'b10000000; // .
+		countdown[13] = 8'b00000000; // 
+		countdown[14] = 8'b10000000; // .
+		countdown[15] = 8'b00000000; // 
+	end
 
 	// VGA output
 	hvsync_generator hvsync_gen(
@@ -47,6 +67,21 @@ module tt_um_nvious_graphics(
 		.display_on(video_active),
 		.hpos(x),
 		.vpos(y)
+	);
+
+	// gradient
+	wire gsky; // gradient sky
+	gradient_rom gradient_sky(
+		.y(y[6:0]),
+		.x(x[1:0]),
+		.pixel(gsky)
+	);
+
+	wire gsun; // gradient of sun
+	gradient_rom gradient_sun(
+		.y(sy1[6:0]),
+		.x(x[1:0]),
+		.pixel(gsun)
 	);
 
 	wire a0 = y > 7;
@@ -121,63 +156,10 @@ module tt_um_nvious_graphics(
 	wire [9:0] sy1 = y - 240;
 	wire sq0 = (sy0[6:0] < (circle[sx0[6:0]])) & (sx0 < 128) & (sy0 < 128);
 	wire sq1 = (sy0[6:0] < (circle[sx1[6:0]])) & (sx1 < 128) & (sy0 < 128);
-	wire sq2 = (sy1[6:0] < (circle[sx0[6:0]])) & (sx0 < 128) & (sy1 < 64);//128);
-	wire sq3 = (sy1[6:0] < (circle[sx1[6:0]])) & (sx1 < 128) & (sy1 < 64);//128);
+	wire sq2 = (sy1[6:0] < (circle[sx0[6:0]])) & (sx0 < 128) & (sy1 < 64);
+	wire sq3 = (sy1[6:0] < (circle[sx1[6:0]])) & (sx1 < 128) & (sy1 < 64);
 	wire s = sq0 | sq1 | sq2 | sq3;
 
-	wire [5:0] black  = 6'b000000;
-	wire [5:0] gray   = 6'b010101;
-	wire [5:0] cyan   = 6'b101111;
-	wire [5:0] red    = 6'b110001;
-	wire [5:0] orange = 6'b110101;
-	wire [5:0] yellow = 6'b111101;
-	wire [5:0] pink   = 6'b110111;
-	wire [5:0] dark_purple = 6'b100010;
-	wire [5:0] dark_blue = 6'b000001;
-
-	wire mask = a | b | c | d | e | f | g | h;
-
-	wire xor0 = x[0] ^ y[0];
-	wire xor1 = (~x[0] & ~y[0]) & (x[1] & y[1]);
-
-	wire bg0 = y < 50;
-	wire bg1 = y < 75 & xor1;
-	wire bg2 = y < 100 & xor0;
-	wire bg3 = y > 99 & y < 125 & xor1;
-
-	// gradient
-	wire gsky; // gradient sky
-	gradient_rom gradient_sky(
-		.y(y[6:0]),
-		.x(x[1:0]),
-		.pixel(gsky)
-	);
-
-	wire gsun; // gradient of sun
-	gradient_rom gradient_sun(
-		.y(sy1[6:0]),
-		.x(x[1:0]),
-		.pixel(gsun)
-	);
-
-	// background (sky)
-	//wire [5:0] bg = (x[3] ^ y[3]) ? gray : black;
-	//wire [5:0] bg = bg0 ? dark_purple : (bg1 ? dark_purple : (bg2 ? dark_purple : (bg3 ? dark_purple : black)));
-	//wire [5:0] bg = (y < 112) ? (gsun ? black : dark_purple) : (y < 200) ? black : ((y < 256) ? (gsky ? pink : black) : black);
-	//wire [5:0] bg = (y < 112) ? (gsun ? black : dark_blue) : ((y > 200 && sy1 < 64) ? (gsun ? 6'b100010 : black) : black);
-	//wire [5:0] bg = (y < 128) ? (gsky ? dark_blue : black) : ((y > 200 && sy1 < 64) ? (gsun ? 6'b100010 : dark_blue) : dark_blue);
-	wire [5:0] bg = (y < 128) ? (gsky ? dark_blue : black) : ((y > 200 && sy1 < 64) ? (gsun ? 6'b100010 : dark_blue) : (y > sy1) ? black: dark_blue);
-	// c-ground (stars)
-	wire [5:0] cg = ((x[6]^y[6]) & (x[5:0]==32 & y[5:0]==32) & (y < sy1) ) ? cyan : bg;
-	// d-ground (sun)
-	wire [5:0] dg = s ? ((sy1 < 128) ? (gsun ? red : orange) : (gsun ? orange : yellow)) : cg;
-	// e-ground
-	//wire [5:0] eg = mask & xor1 ? cyan : dg;
-/*
-	wire[10:0] ey = (y > 10'd303) ? (y - 10'd303) : 11'd0;
-	wire [2:0] eb = {2'b00, ey[0]} + {2'b00, ey[1]} + {2'b00, ey[2]} + {2'b00, ey[3]} + {2'b00, ey[4]} + {2'b00, ey[5]} + {2'b00, ey[6]} + {2'b00, ey[7]};
-	wire [5:0] eg = (ey > 0 & eb == 1) ? pink : dg;
-*/
 	wire ey0 = y == 10'd304;
 	wire ey1 = (y > 10'd304) & (y == 10'd305 + {9'd0, counter[6]});
 	wire ey2 = (y > 10'd306) & (y == 10'd307 + {8'd0, counter[6:5]});
@@ -186,7 +168,34 @@ module tt_um_nvious_graphics(
 	wire ey5 = (y > 10'd334) & (y == 10'd335 + {5'd0, counter[6:2]});
 	wire ey6 = (y > 10'd366) & (y == 10'd367 + {4'd0, counter[6:1]});
 	wire ey7 = (y > 10'd430) & (y == 10'd431 + {3'd0, counter[6:0]});
-	wire [5:0] eg = ey0 | ey1 | ey2 | ey3 | ey4 | ey5 | ey6 | ey7 ? pink : dg;
+	wire ey = ey0 | ey1 | ey2 | ey3 | ey4 | ey5 | ey6 | ey7;
+	wire ex0 = x == 320;
+	wire ex1 = y == x - 80;
+	wire ex2 = y == 559 - x;
+	wire ex3 = y == (x>>1) + 80;
+	wire ex4 = y == 399 - (x>>1);
+	wire ex5 = y == (x>>2) + (x>>4) + 141;
+	wire ex6 = y == 339 - (x>>2) - (x>>4);
+	wire ex = (y > 10'd304) & (ex0 | ex1 | ex2 | ex3 | ex4 | ex5 | ex6);
+
+	wire [5:0] black  = 6'b000000;
+	wire [5:0] star   = 6'b001011;
+	wire [5:0] cyan   = 6'b001111;
+	wire [5:0] red    = 6'b110001;
+	wire [5:0] orange = 6'b110101;
+	wire [5:0] yellow = 6'b111101;
+	wire [5:0] pink   = 6'b110111;
+	wire [5:0] purple = 6'b100010;
+	wire [5:0] blue   = 6'b000001;
+
+	// background (sky)
+	wire [5:0] bg = (y < 128) ? (gsky ? blue : black) : ((y > 200 && sy1 < 64) ? (gsun ? purple : blue) : (y > sy1) ? black: blue);
+	// c-ground (stars)
+	wire [5:0] cg = ((x[6]^y[6]) & (x[5:0]==32 & y[5:0]==32) & (y < sy1) ) ? star : bg;
+	// d-ground (sun)
+	wire [5:0] dg = s ? ((sy1 < 128) ? (gsun ? red : orange) : (gsun ? orange : yellow)) : cg;
+	// e-ground
+	wire [5:0] eg = ex | ey ? pink : dg;
 	// foreground
 	wire [5:0] fg = cyan;
 	assign RGB = video_active ? (((a & led[0]) | (b & led[1]) | (c & led[2]) | (d & led[3]) | (e & led[4]) | (f & led[5]) | (g & led[6]) | (h & led[7])) ? fg : eg) : black;

@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 
 	SDL_Window* window =
 	    SDL_CreateWindow(
-	        "Tiny Tapeout VGA",
+	        "nVious Graphics",
 	        SDL_WINDOWPOS_UNDEFINED,
 	        SDL_WINDOWPOS_UNDEFINED,
 	        VGA_HORZ_ACTIVE,
@@ -132,9 +132,9 @@ int main(int argc, char **argv) {
 			uint8_t vsync = (uo_out & 0b00001000) >> 3;
 
 			// h and v blank logic
-			if (hsync == polarity && vsync == polarity) { // XXX Sync polarity positive or negative?
+			if (hsync == polarity && vsync == polarity) {
 				hnum = -VGA_HORZ_BACK_PORCH;
-				vnum = -VGA_VERT_BACK_PORCH - VGA_VERT_SYNC_PULSE; // XXX include SYNC_PULSE???
+				vnum = -VGA_VERT_BACK_PORCH - VGA_VERT_SYNC_PULSE;
 			}
 
 			// active frame
@@ -175,7 +175,7 @@ int main(int argc, char **argv) {
 		static int last_update_ticks = 0;
 		if (ticks - last_update_ticks > 1000) {
 			last_update_ticks = ticks;
-			std::string fps = "Tiny Tapeout VGA (" + std::to_string((int)1000.0/(ticks - last_ticks)) + " FPS)";
+			std::string fps = "nVious Graphics (" + std::to_string((int)1000.0/(ticks - last_ticks)) + " FPS)";
 			SDL_SetWindowTitle(window, fps.c_str());
 		}
 	}
