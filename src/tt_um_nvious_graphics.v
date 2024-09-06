@@ -105,9 +105,9 @@ module tt_um_nvious_graphics(
 	wire g5 = e5;
 	wire g = g0 & g1 & g2 & g3 & g4 & g5;
 
-	wire [9:0] hx0 = x - 512;
+	wire [9:0] hx0 = x - 511;
 	wire [9:0] hy0 = 439 - y;
-	wire [9:0] hx1 = 511 - x;
+	wire [9:0] hx1 = 512 - x;
 	wire [9:0] hy1 = y - 440;
 	wire hq0 = (hy0[4:0] < (circle[{hx0[4:0],2'b00}][6:2])) & (hx0 < 32) & (hy0 < 32);
 	wire hq1 = (hy0[4:0] < (circle[{hx1[4:0],2'b00}][6:2])) & (hx1 < 32) & (hy0 < 32);
@@ -131,7 +131,7 @@ module tt_um_nvious_graphics(
 	wire [5:0] red    = 6'b110001;
 	wire [5:0] orange = 6'b110101;
 	wire [5:0] yellow = 6'b111101;
-	wire [5:0] pink   = 6'b110011;
+	wire [5:0] pink   = 6'b110111;
 	wire [5:0] dark_purple = 6'b100010;
 	wire [5:0] dark_blue = 6'b000001;
 
@@ -173,10 +173,23 @@ module tt_um_nvious_graphics(
 	wire [5:0] dg = s ? ((sy1 < 128) ? (gsun ? red : orange) : (gsun ? orange : yellow)) : cg;
 	// e-ground
 	//wire [5:0] eg = mask & xor1 ? cyan : dg;
-	wire [5:0] eg = dg;
+/*
+	wire[10:0] ey = (y > 10'd303) ? (y - 10'd303) : 11'd0;
+	wire [2:0] eb = {2'b00, ey[0]} + {2'b00, ey[1]} + {2'b00, ey[2]} + {2'b00, ey[3]} + {2'b00, ey[4]} + {2'b00, ey[5]} + {2'b00, ey[6]} + {2'b00, ey[7]};
+	wire [5:0] eg = (ey > 0 & eb == 1) ? pink : dg;
+*/
+	wire ey0 = y == 10'd304;
+	wire ey1 = (y > 10'd304) & (y == 10'd305 + {9'd0, counter[6]});
+	wire ey2 = (y > 10'd306) & (y == 10'd307 + {8'd0, counter[6:5]});
+	wire ey3 = (y > 10'd310) & (y == 10'd311 + {7'd0, counter[6:4]});
+	wire ey4 = (y > 10'd318) & (y == 10'd319 + {6'd0, counter[6:3]});
+	wire ey5 = (y > 10'd334) & (y == 10'd335 + {5'd0, counter[6:2]});
+	wire ey6 = (y > 10'd366) & (y == 10'd367 + {4'd0, counter[6:1]});
+	wire ey7 = (y > 10'd430) & (y == 10'd431 + {3'd0, counter[6:0]});
+	wire [5:0] eg = ey0 | ey1 | ey2 | ey3 | ey4 | ey5 | ey6 | ey7 ? pink : dg;
 	// foreground
 	wire [5:0] fg = cyan;
-	assign RGB = video_active ? (((a & led[0]) | (b & led[1]) | (c & led[2]) | (d & led[3]) | (e & led[4]) | (f & led[5]) | (g & led[6]) | (h & led[7])) ? fg : eg) : 6'b000000;
+	assign RGB = video_active ? (((a & led[0]) | (b & led[1]) | (c & led[2]) | (d & led[3]) | (e & led[4]) | (f & led[5]) | (g & led[6]) | (h & led[7])) ? fg : eg) : black;
 
 	always @(posedge vsync) begin
 		if (~rst_n) begin
